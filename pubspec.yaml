@@ -1,0 +1,49 @@
+name: ios_f_n_9potsofgold_3265
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  logger: ^2.5.0
+  share_plus: ^10.1.4
+
+  flutter_bloc: ^9.0.0
+
+  shared_preferences: ^2.5.2
+  freezed_annotation: ^2.4.4
+  equatable: ^2.0.7
+  url_launcher: ^6.3.1
+  font_awesome_flutter: ^10.8.0
+  just_audio: ^0.9.46
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+    
+  flutter_lints: ^4.0.0
+  freezed: ^2.5.7
+  json_serializable: ^6.9.0
+  build_runner: ^2.4.13
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: Aladin
+      fonts:
+        - asset: assets/fonts/Aladin-Regular.ttf
+          weight: 400
+
+  assets:
+    - assets/
+    - assets/images/
+    - assets/images/game_assets/
+    - assets/images/category/
+    - assets/images/legends/
+    - assets/images/onboarding/
