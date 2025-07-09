@@ -66,12 +66,6 @@ Future<String> _pollForOneSignalId({Duration interval = const Duration(milliseco
   throw Exception('Timed out waiting for OneSignal ID');
 }
 
-
-Future<void> _requestAppTracking() async {
-  final status = await AppTrackingTransparency.requestTrackingAuthorization();
-  debugPrint('AppTrackingTransparency status: $status');
-}
-
 // Перевірка локації
 Future<String> isLocationCorrect() async {
   final uri = Uri.parse(
@@ -205,6 +199,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
   @override
   void initState() {
     super.initState();
+
+    TrackingService.requestTrackingAndSaveIdfa();
 
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -413,4 +409,27 @@ class UrlWebViewArgs {
   final bool openedByPush;
 
   UrlWebViewArgs(this.url, this.pushUrl, this.openedByPush);
+}
+
+class TrackingService {
+  static const String _fallbackIdfa = '00000000-0000-0000-0000-000000000000';
+  static const String _prefsKey = 'advertising_id';
+
+  static Future<void> requestTrackingAndSaveIdfa() async {
+    var status = await AppTrackingTransparency.trackingAuthorizationStatus;
+    if (status == TrackingStatus.notDetermined) {
+      status = await AppTrackingTransparency.requestTrackingAuthorization();
+      debugPrint('ATT prompt result: $status');
+    } else {
+      debugPrint('ATT already determined: $status');
+    }
+
+    final newIdfa = (status == TrackingStatus.authorized)
+        ? await AdvertisingId.id(true) ?? _fallbackIdfa
+        : _fallbackIdfa;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefsKey, newIdfa);
+    debugPrint('Saved IDFA: $newIdfa');
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ios_f_n_9potsofgold_3265/pages/onboarding_screen.dart';
 import 'package:ios_f_n_9potsofgold_3265/pages/tabs_screen.dart';
+import 'package:ios_f_n_9potsofgold_3265/ver_screen.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:just_audio/just_audio.dart';
@@ -75,7 +76,9 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
+
     super.initState();
+    TrackingService.requestTrackingAndSaveIdfa();
     AudioManager().init();
     _checkFirstRun();
   }
