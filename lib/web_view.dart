@@ -53,6 +53,83 @@ Future<NavigationActionPolicy> handleDeepLink({
   final scheme = uri.scheme.toLowerCase();
   final host = uri.host.toLowerCase();
 
+  const bankSchemes = {
+    'rbcmobile',
+    'cibcbanking',
+    'scotiabank',
+    'bmoolbb',
+    'conexus',
+    'pcfbanking',
+    'tdct',
+  };
+
+  if (bankSchemes.contains(scheme)) {
+    await launchUrlString(urlStr, mode: LaunchMode.externalApplication);
+    return NavigationActionPolicy.CANCEL;
+  }
+
+  if (host == 'mobile.rbcroyalbank.com' && uri.queryParameters['emrf'] != null) {
+    final token = uri.queryParameters['emrf']!;
+    await launchUrlString('rbcmobile://emrf_$token',
+        mode: LaunchMode.externalApplication);
+    return NavigationActionPolicy.CANCEL;
+  }
+
+  if (host.contains('cibconline.cibc.com')) {
+    // у фрагменті видає "#/auth/emt-fulfill-request?emtId=..."
+    final frag = uri.fragment;
+    final params = Uri.splitQueryString(frag);
+    if (params['emtId'] != null) {
+      final token = params['emtId']!;
+      await launchUrlString(
+          'cibcbanking://requestetransfer?etransfertoken=$token',
+          mode: LaunchMode.externalApplication);
+      return NavigationActionPolicy.CANCEL;
+    }
+  }
+
+  if (host == 'secure.scotiabank.com' && uri.queryParameters['requestRefNumber'] != null) {
+    final ref = uri.queryParameters['requestRefNumber']!;
+    await launchUrlString(
+        'scotiabank://?requestFlag=true&requestRefNumber=$ref',
+        mode: LaunchMode.externalApplication);
+    return NavigationActionPolicy.CANCEL;
+  }
+
+  if (host == 'm.bmo.com' && uri.queryParameters['receiveFulfillToken'] != null) {
+    final token = uri.queryParameters['receiveFulfillToken']!;
+    await launchUrlString('bmoolbb://id=$token&type=FULFILL',
+        mode: LaunchMode.externalApplication);
+    return NavigationActionPolicy.CANCEL;
+  }
+
+  if (host.contains('conexus.ca') &&
+      uri.queryParameters['paymentId'] != null &&
+      uri.queryParameters['type'] != null) {
+    final id   = uri.queryParameters['paymentId']!;
+    final type = uri.queryParameters['type']!;
+    await launchUrlString(
+        'conexus://etransfers?type=$type&paymentId=$id',
+        mode: LaunchMode.externalApplication);
+    return NavigationActionPolicy.CANCEL;
+  }
+
+  if (host == 'secure.pcfinancial.ca' &&
+      uri.queryParameters['interacIssuedIncomingMoneyDemandNumber'] != null) {
+    final num = uri.queryParameters['interacIssuedIncomingMoneyDemandNumber']!;
+    await launchUrlString(
+        'pcfbanking://?interacIssuedIncomingMoneyDemandNumber=$num',
+        mode: LaunchMode.externalApplication);
+    return NavigationActionPolicy.CANCEL;
+  }
+
+  if (host.contains('feeds.td.com') && uri.queryParameters['RMID'] != null) {
+    final rmid = uri.queryParameters['RMID']!;
+    await launchUrlString('tdct://?RMID=$rmid',
+        mode: LaunchMode.externalApplication);
+    return NavigationActionPolicy.CANCEL;
+  }
+
   if (host.contains('challenges.cloudflare.com')) return NavigationActionPolicy.ALLOW;
 
   if (urlStr.startsWith('about:') && scheme == 'about') return NavigationActionPolicy.ALLOW;
