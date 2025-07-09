@@ -377,52 +377,13 @@ class RootApp extends StatefulWidget {
 }
 
 class _RootAppState extends State<RootApp> with WidgetsBindingObserver {
-  bool _attRequested = false;
-  static const String _fallbackIdfa = '00000000-0000-0000-0000-000000000000';
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _requestTrackingAndSaveIdfa();
-    _attRequested = true;
   }
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (!_attRequested && state == AppLifecycleState.resumed) {
-      _requestTrackingAndSaveIdfa();
-      _attRequested = true;
-    }
-  }
-
-  Future<void> _requestTrackingAndSaveIdfa() async {
-    final status = await AppTrackingTransparency.requestTrackingAuthorization();
-    debugPrint('ATT status: $status');
-
-    String newIdfa;
-    if (status == TrackingStatus.authorized) {
-      try {
-        newIdfa = await AdvertisingId.id(true) ?? _fallbackIdfa;
-      } catch (_) {
-        newIdfa = _fallbackIdfa;
-      }
-    } else {
-      newIdfa = _fallbackIdfa;
-    }
-
-    // 3) Зберігаємо у shared prefs
-    idfa = newIdfa;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('advertising_id', idfa);
-    debugPrint('Saved IDFA: $idfa');
-  }
 
   @override
   Widget build(BuildContext context) {
