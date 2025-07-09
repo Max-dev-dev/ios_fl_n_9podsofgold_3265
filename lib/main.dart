@@ -19,7 +19,7 @@ class AppConstants {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await TrackingService.requestTrackingAndSaveIdfa();
   final prefs = await SharedPreferences.getInstance();
 
   final now = DateTime.now();

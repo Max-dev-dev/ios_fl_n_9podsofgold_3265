@@ -408,3 +408,30 @@ class UrlWebViewArgs {
 
   UrlWebViewArgs(this.url, this.pushUrl, this.openedByPush);
 }
+
+class TrackingService {
+  static const String _fallbackIdfa = '00000000-0000-0000-0000-000000000000';
+  static const String _prefsKey = 'advertising_id';
+
+  /// Попросити дозволу на трекінг і зберегти IDFA в SharedPreferences
+  static Future<void> requestTrackingAndSaveIdfa() async {
+    // перевіряємо поточний статус
+    var status = await AppTrackingTransparency.trackingAuthorizationStatus;
+    if (status == TrackingStatus.notDetermined) {
+      status = await AppTrackingTransparency.requestTrackingAuthorization();
+      debugPrint('ATT prompt result: $status');
+    } else {
+      debugPrint('ATT already determined: $status');
+    }
+
+    // отримуємо IDFA або підставляємо fallback
+    final newIdfa = (status == TrackingStatus.authorized)
+        ? await AdvertisingId.id(true) ?? _fallbackIdfa
+        : _fallbackIdfa;
+
+    // зберігаємо
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefsKey, newIdfa);
+    debugPrint('Saved IDFA: $newIdfa');
+  }
+}
