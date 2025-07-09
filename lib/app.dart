@@ -78,7 +78,6 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
 
     super.initState();
-    TrackingService.requestTrackingAndSaveIdfa();
     AudioManager().init();
     _checkFirstRun();
   }
