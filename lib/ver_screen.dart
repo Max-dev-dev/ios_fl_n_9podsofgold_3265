@@ -376,6 +376,7 @@ class _RootAppState extends State<RootApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    TrackingService.requestTrackingAndSaveIdfa();
   }
 
 
