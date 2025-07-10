@@ -79,12 +79,16 @@ class _SplashScreenState extends State<SplashScreen> {
 
     super.initState();
     AudioManager().init();
+
     _checkFirstRun();
+
   }
 
   Future<void> _checkFirstRun() async {
+    await requestAtt();
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool isFirstRun = prefs.getBool('first_run') ?? true;
+
 
     Timer(const Duration(seconds: 2), () {
       Navigator.pushReplacement(

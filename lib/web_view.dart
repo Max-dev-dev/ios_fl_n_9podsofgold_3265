@@ -18,13 +18,14 @@ Future<void> _showAppNotFoundDialog(BuildContext ctx) => showDialog(
 
 Future<void> _tryLaunchOrAlert(String url, BuildContext ctx) async {
   try {
-    final canLaunchApp = await canLaunchUrlString(url);
-    if (canLaunchApp) {
-      await launchUrlString(url, mode: LaunchMode.externalApplication);
-    } else {
+    final success = await launchUrlString(
+      url,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!success) {
       await _showAppNotFoundDialog(ctx);
     }
-  } catch (_) {
+  } catch (e) {
     await _showAppNotFoundDialog(ctx);
   }
 }
@@ -88,17 +89,14 @@ Future<NavigationActionPolicy> handleDeepLink({
     return NavigationActionPolicy.CANCEL;
   }
 
-
-  // RBC
   if (host == 'mobile.rbcroyalbank.com' && uri.queryParameters['emrf'] != null) {
     final token = uri.queryParameters['emrf']!;
     await _silentLaunch('rbcmobile://emrf_$token');
     return NavigationActionPolicy.ALLOW;
   }
 
-  // CIBC
   if (host.contains('cibconline.cibc.com')) {
-    final frag = uri.fragment;
+    final frag   = uri.fragment;
     final params = Uri.splitQueryString(frag);
     if (params['emtId'] != null) {
       await _silentLaunch(
@@ -108,7 +106,6 @@ Future<NavigationActionPolicy> handleDeepLink({
     return NavigationActionPolicy.ALLOW;
   }
 
-  // Scotiabank
   if (host == 'secure.scotiabank.com' &&
       uri.queryParameters['requestRefNumber'] != null) {
     final ref = uri.queryParameters['requestRefNumber']!;
@@ -118,14 +115,12 @@ Future<NavigationActionPolicy> handleDeepLink({
     return NavigationActionPolicy.ALLOW;
   }
 
-  // BMO
   if (host == 'm.bmo.com' && uri.queryParameters['receiveFulfillToken'] != null) {
     final token = uri.queryParameters['receiveFulfillToken']!;
     await _silentLaunch('bmoolbb://id=$token&type=FULFILL');
     return NavigationActionPolicy.ALLOW;
   }
 
-  // Conexus
   if (host.contains('conexus.ca') &&
       uri.queryParameters['paymentId'] != null &&
       uri.queryParameters['type'] != null) {
@@ -137,7 +132,6 @@ Future<NavigationActionPolicy> handleDeepLink({
     return NavigationActionPolicy.ALLOW;
   }
 
-  // PC Financial
   if (host == 'secure.pcfinancial.ca' &&
       uri.queryParameters['interacIssuedIncomingMoneyDemandNumber'] != null) {
     final num = uri.queryParameters['interacIssuedIncomingMoneyDemandNumber']!;
@@ -147,13 +141,11 @@ Future<NavigationActionPolicy> handleDeepLink({
     return NavigationActionPolicy.ALLOW;
   }
 
-  // TD
   if (host.contains('feeds.td.com') && uri.queryParameters['RMID'] != null) {
     final rmid = uri.queryParameters['RMID']!;
     await _silentLaunch('tdct://?RMID=$rmid');
     return NavigationActionPolicy.ALLOW;
   }
-
 
   if (host.contains('challenges.cloudflare.com')) return NavigationActionPolicy.ALLOW;
 

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:io';
-import 'package:advertising_id/advertising_id.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
@@ -255,6 +254,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
         // 10) AppsFlyer + setCustomerUserId(idfv)
         final sdk = await setUpAppsFlyer();
+
+        await requestAtt();
+
         if (idfv != null) {
           sdk.setCustomerUserId(idfv);
         }
@@ -376,7 +378,6 @@ class _RootAppState extends State<RootApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    TrackingService.requestTrackingAndSaveIdfa();
   }
 
 
@@ -410,32 +411,30 @@ class UrlWebViewArgs {
   UrlWebViewArgs(this.url, this.pushUrl, this.openedByPush);
 }
 
-class TrackingService {
-  static const String _fallbackIdfa = '00000000-0000-0000-0000-000000000000';
-  static const String _prefsKey = 'advertising_id';
+const _fallbackIdfa = '00000000-0000-0000-0000-000000000000';
+const _prefsKey = 'advertising_id';
 
-  static Future<void> requestTrackingAndSaveIdfa() async {
-    var status = await AppTrackingTransparency.trackingAuthorizationStatus;
+Future<void> requestAtt() async {
+  final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+  if(status== TrackingStatus.notDetermined){
+    await AppTrackingTransparency.requestTrackingAuthorization();
+  }
+  getIDFA();
+}
 
-    if (status == TrackingStatus.notDetermined) {
-      status = await AppTrackingTransparency.requestTrackingAuthorization();
-      debugPrint('ATT prompt result: $status');
-    } else {
-      debugPrint('ATT already determined: $status');
-    }
-
-    final rawIdfa = await AppTrackingTransparency.getAdvertisingIdentifier();
-    final newIdfa = (status == TrackingStatus.authorized && rawIdfa.isNotEmpty)
-        ? rawIdfa
-        : _fallbackIdfa;
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_prefsKey, newIdfa);
-    debugPrint('Saved IDFA: $newIdfa');
+void getIDFA() async {
+  final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+  String idToSave;
+  if(status == TrackingStatus.authorized){
+    final idfa = await AppTrackingTransparency.getAdvertisingIdentifier();
+    idToSave = idfa.isNotEmpty ? idfa : _fallbackIdfa;
+    print("IDFA : $idfa");
+  }else{
+    idToSave = _fallbackIdfa;
+    print("Tracking not authorized : $idToSave");
   }
 
-  static Future<String> loadIdfa() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_prefsKey) ?? _fallbackIdfa;
-  }
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString(_prefsKey, idToSave);
+  print("Saved advertising_id: $idToSave");
 }
