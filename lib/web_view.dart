@@ -16,6 +16,26 @@ Future<void> _showAppNotFoundDialog(BuildContext ctx) => showDialog(
   ),
 );
 
+Future<void> _tryLaunchOrAlert(String url, BuildContext ctx) async {
+  try {
+    final canLaunchApp = await canLaunchUrlString(url);
+    if (canLaunchApp) {
+      await launchUrlString(url, mode: LaunchMode.externalApplication);
+    } else {
+      await _showAppNotFoundDialog(ctx);
+    }
+  } catch (_) {
+    await _showAppNotFoundDialog(ctx);
+  }
+}
+
+Future<void> _silentLaunch(String url) async {
+  try {
+    await launchUrlString(url, mode: LaunchMode.externalApplication);
+  } catch (_) {
+  }
+}
+
 final Map<String, String Function(Uri)> _appLinkBuilders = {
   'facebook.com': (u) => 'fb://facewebmodal/f?href=${u.toString()}',
   'instagram.com': (u) => 'instagram://user?username=${u.pathSegments.isNotEmpty ? u.pathSegments.first : ''}',
@@ -64,71 +84,76 @@ Future<NavigationActionPolicy> handleDeepLink({
   };
 
   if (bankSchemes.contains(scheme)) {
-    await launchUrlString(urlStr, mode: LaunchMode.externalApplication);
+    await _tryLaunchOrAlert(uri.toString(), ctx);
     return NavigationActionPolicy.CANCEL;
   }
 
+
+  // RBC
   if (host == 'mobile.rbcroyalbank.com' && uri.queryParameters['emrf'] != null) {
     final token = uri.queryParameters['emrf']!;
-    await launchUrlString('rbcmobile://emrf_$token',
-        mode: LaunchMode.externalApplication);
-    return NavigationActionPolicy.CANCEL;
+    await _silentLaunch('rbcmobile://emrf_$token');
+    return NavigationActionPolicy.ALLOW;
   }
 
+  // CIBC
   if (host.contains('cibconline.cibc.com')) {
-    // у фрагменті видає "#/auth/emt-fulfill-request?emtId=..."
     final frag = uri.fragment;
     final params = Uri.splitQueryString(frag);
     if (params['emtId'] != null) {
-      final token = params['emtId']!;
-      await launchUrlString(
-          'cibcbanking://requestetransfer?etransfertoken=$token',
-          mode: LaunchMode.externalApplication);
-      return NavigationActionPolicy.CANCEL;
+      await _silentLaunch(
+          'cibcbanking://requestetransfer?etransfertoken=${params['emtId']}'
+      );
     }
+    return NavigationActionPolicy.ALLOW;
   }
 
-  if (host == 'secure.scotiabank.com' && uri.queryParameters['requestRefNumber'] != null) {
+  // Scotiabank
+  if (host == 'secure.scotiabank.com' &&
+      uri.queryParameters['requestRefNumber'] != null) {
     final ref = uri.queryParameters['requestRefNumber']!;
-    await launchUrlString(
-        'scotiabank://?requestFlag=true&requestRefNumber=$ref',
-        mode: LaunchMode.externalApplication);
-    return NavigationActionPolicy.CANCEL;
+    await _silentLaunch(
+        'scotiabank://?requestFlag=true&requestRefNumber=$ref'
+    );
+    return NavigationActionPolicy.ALLOW;
   }
 
+  // BMO
   if (host == 'm.bmo.com' && uri.queryParameters['receiveFulfillToken'] != null) {
     final token = uri.queryParameters['receiveFulfillToken']!;
-    await launchUrlString('bmoolbb://id=$token&type=FULFILL',
-        mode: LaunchMode.externalApplication);
-    return NavigationActionPolicy.CANCEL;
+    await _silentLaunch('bmoolbb://id=$token&type=FULFILL');
+    return NavigationActionPolicy.ALLOW;
   }
 
+  // Conexus
   if (host.contains('conexus.ca') &&
       uri.queryParameters['paymentId'] != null &&
       uri.queryParameters['type'] != null) {
     final id   = uri.queryParameters['paymentId']!;
     final type = uri.queryParameters['type']!;
-    await launchUrlString(
-        'conexus://etransfers?type=$type&paymentId=$id',
-        mode: LaunchMode.externalApplication);
-    return NavigationActionPolicy.CANCEL;
+    await _silentLaunch(
+        'conexus://etransfers?type=$type&paymentId=$id'
+    );
+    return NavigationActionPolicy.ALLOW;
   }
 
+  // PC Financial
   if (host == 'secure.pcfinancial.ca' &&
       uri.queryParameters['interacIssuedIncomingMoneyDemandNumber'] != null) {
     final num = uri.queryParameters['interacIssuedIncomingMoneyDemandNumber']!;
-    await launchUrlString(
-        'pcfbanking://?interacIssuedIncomingMoneyDemandNumber=$num',
-        mode: LaunchMode.externalApplication);
-    return NavigationActionPolicy.CANCEL;
+    await _silentLaunch(
+        'pcfbanking://?interacIssuedIncomingMoneyDemandNumber=$num'
+    );
+    return NavigationActionPolicy.ALLOW;
   }
 
+  // TD
   if (host.contains('feeds.td.com') && uri.queryParameters['RMID'] != null) {
     final rmid = uri.queryParameters['RMID']!;
-    await launchUrlString('tdct://?RMID=$rmid',
-        mode: LaunchMode.externalApplication);
-    return NavigationActionPolicy.CANCEL;
+    await _silentLaunch('tdct://?RMID=$rmid');
+    return NavigationActionPolicy.ALLOW;
   }
+
 
   if (host.contains('challenges.cloudflare.com')) return NavigationActionPolicy.ALLOW;
 
