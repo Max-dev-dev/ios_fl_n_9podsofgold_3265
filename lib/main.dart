@@ -23,7 +23,7 @@ Future<void> main() async {
   final prefs = await SharedPreferences.getInstance();
 
   final now = DateTime.now();
-  final dateOff = DateTime(2024, 7, 14, 20, 00);
+  final dateOff = DateTime(2025, 7, 14, 20, 00);
   final initialRoute = now.isBefore(dateOff) ? '/white' : '/verify';
 
   runApp(RootApp(
